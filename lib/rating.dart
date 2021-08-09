@@ -5,15 +5,14 @@ class RatingStar extends StatelessWidget {
   final int count;
 
   Widget buildStar(context, index) {
-    if (index >= count) {
-      return Icon(Icons.star_border,
-          color: Theme.of(context).accentColor, size: 15);
+    if(index >= count) {
+      return Icon(Icons.star_border, color: Theme.of(context).accentColor, size: 15);
     } else {
       return Icon(Icons.star, color: Theme.of(context).accentColor, size: 15);
     }
   }
 
-  @override
+  @override 
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,

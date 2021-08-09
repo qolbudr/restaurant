@@ -42,10 +42,9 @@ List<Restaurant> findRestaurant(String query, List<Restaurant> restaurant) {
   List<Restaurant> result = [];
 
   restaurant.forEach((data) {
-    if (data.name.contains(new RegExp(query, caseSensitive: false))) {
+    if(data.name.contains(new RegExp(query, caseSensitive: false))) {
       result.add(data);
     }
   });
-
   return result;
 }
