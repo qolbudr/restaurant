@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:restaurant_app/rating.dart';
 import 'package:restaurant_app/model/restaurant.dart';
+import 'package:restaurant_app/service/api_service.dart';
 import 'package:restaurant_app/view.dart';
 import 'package:restaurant_app/result.dart';
 import 'dart:async';
@@ -11,14 +12,16 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  Future<ListRestaurant> _listRestaurant;
   double spacing = 500;
 
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 2), () => setState(() {
+    Timer(Duration(seconds: 5), () => setState(() {
       spacing = 0;
     }));
+    _listRestaurant = ApiService().getList();
   }
 
   @override
@@ -45,63 +48,41 @@ class _HomeState extends State<Home> {
                       children: [
                         Text("Where do you want to eat today ?", style: TextStyle(color: Colors.white, fontSize: 22)),
                         SizedBox(height: 20),
-                        FutureBuilder<String>(
-                          future:  DefaultAssetBundle.of(context).loadString('assets/restaurant.json'),
-                          builder: (context, snapshot) {
-                            if(snapshot.connectionState != ConnectionState.waiting) {
-                              List<Restaurant> data = parseData(snapshot.data);
-                              return TextField(
-                                onSubmitted: (query) {
-                                  List<Restaurant> searchResult = findRestaurant(query, data);
-                                  if(searchResult.length > 0) {
-                                    Navigator.push(context, MaterialPageRoute(
-                                      builder: (context) => Result(result: searchResult)
-                                    ));
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                      content: Text("Restaurant not found"),
-                                      action: SnackBarAction(
-                                        label: 'Okay',
-                                        onPressed: () {
-                                        },
-                                      ),
-                                    ));
-                                  }
-                                },
-                                cursorWidth: 1,
-                                cursorColor: Theme.of(context).accentColor,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  hintText: "Find restaurant...",
-                                  prefixIcon: Icon(Icons.search_outlined),
-                                  disabledBorder: UnderlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30), 
-                                    borderSide: BorderSide(color: Colors.transparent)
-                                  ),
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30), 
-                                    borderSide: BorderSide(color: Colors.transparent)
-                                  ), 
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30), 
-                                    borderSide: BorderSide(color: Colors.transparent)
-                                  ),
-                                  errorBorder: UnderlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30), 
-                                    borderSide: BorderSide(color: Colors.transparent)
-                                  ),
-                                  focusedErrorBorder: UnderlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30), 
-                                    borderSide: BorderSide(color: Colors.transparent)
-                                  )
-                                ),
-                              );
-                            } else {
-                              return SizedBox();
-                            }
-                          }
-                        )
+                        TextField(
+                          onSubmitted: (query) {
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (context) => Result(query: query)
+                            ));
+                          },
+                          cursorWidth: 1,
+                          cursorColor: Theme.of(context).accentColor,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            hintText: "Find restaurant...",
+                            prefixIcon: Icon(Icons.search_outlined),
+                            disabledBorder: UnderlineInputBorder(
+                              borderRadius: BorderRadius.circular(30), 
+                              borderSide: BorderSide(color: Colors.transparent)
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderRadius: BorderRadius.circular(30), 
+                              borderSide: BorderSide(color: Colors.transparent)
+                            ), 
+                            focusedBorder: UnderlineInputBorder(
+                              borderRadius: BorderRadius.circular(30), 
+                              borderSide: BorderSide(color: Colors.transparent)
+                            ),
+                            errorBorder: UnderlineInputBorder(
+                              borderRadius: BorderRadius.circular(30), 
+                              borderSide: BorderSide(color: Colors.transparent)
+                            ),
+                            focusedErrorBorder: UnderlineInputBorder(
+                              borderRadius: BorderRadius.circular(30), 
+                              borderSide: BorderSide(color: Colors.transparent)
+                            )
+                          ),
+                        ),
                       ],
                     )
                   ),
@@ -118,33 +99,51 @@ class _HomeState extends State<Home> {
                       children: [
                         Text("Browse", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         Text("Find your desired restaurant", style: TextStyle(fontSize: 13, color: Colors.black54)),
-                        AnimatedContainer(
-                          duration: Duration(seconds: 2), 
-                          height: spacing,
-                          curve: Curves.easeOut,
-                        ),
                         SizedBox(height: 20),
-                        FutureBuilder<String>(
-                          future:  DefaultAssetBundle.of(context).loadString('assets/restaurant.json'),
+                        FutureBuilder<ListRestaurant>(
+                          future:  _listRestaurant,
                           builder: (context, snapshot) {
-                            if(snapshot.connectionState != ConnectionState.waiting) {
-                              List<Restaurant> data = parseData(snapshot.data);
-                              return GridView.builder(
-                                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                                  maxCrossAxisExtent: (MediaQuery.of(context).size.width / 1) - 5,
-                                  childAspectRatio: 807 / 540,
-                                  mainAxisSpacing: 30,
-                                  crossAxisSpacing: 10,
+                            if(snapshot.connectionState == ConnectionState.done) {
+                              List<RestaurantList> data = snapshot.data.restaurants;
+                              if(snapshot.data.count > 0) {
+                                return Column(
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: Duration(seconds: 2), 
+                                      height: spacing,
+                                      curve: Curves.easeOut,
+                                    ),
+                                    GridView.builder(
+                                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                                        maxCrossAxisExtent: (MediaQuery.of(context).size.width / 1) - 5,
+                                        childAspectRatio: 807 / 540,
+                                        mainAxisSpacing: 30,
+                                        crossAxisSpacing: 10,
+                                      ),
+                                      shrinkWrap: true,
+                                      physics: NeverScrollableScrollPhysics(),
+                                      itemCount: data.length,
+                                      itemBuilder: (context, index) {
+                                        return buildListRestaurant(context, data[index]);
+                                      },
+                                    ),
+                                  ],
+                                );
+                              } else {
+                                return Text("Failed load data");
+                              }
+                            } else if(snapshot.hasError) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text("Gagal memuat data"),
+                                action: SnackBarAction(
+                                  label: 'Okay',
+                                  onPressed: () {
+                                  },
                                 ),
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount: data.length,
-                                itemBuilder: (context, index) {
-                                  return buildListRestaurant(context, data[index]);
-                                },
-                              );
+                              ));
+                              return Text("Failed load data");
                             } else {
-                              return SizedBox();
+                              return LinearProgressIndicator();
                             }
                           },
                         ),
@@ -161,12 +160,12 @@ class _HomeState extends State<Home> {
   }
 }
 
-Widget buildListRestaurant(BuildContext context, Restaurant restaurant) {
+Widget buildListRestaurant(BuildContext context, RestaurantList restaurant) {
   return Container(
     decoration: BoxDecoration(
       borderRadius: BorderRadius.all(Radius.circular(20)),
       image: DecorationImage(
-        image: NetworkImage(restaurant.pictureId),
+        image: NetworkImage("https://restaurant-api.dicoding.dev/images/medium/" + restaurant.pictureId),
         fit: BoxFit.cover,
       ),
     ),
@@ -191,7 +190,7 @@ Widget buildListRestaurant(BuildContext context, Restaurant restaurant) {
         ),
         InkWell(
           onTap: () => Navigator.push(context, MaterialPageRoute(
-            builder: (context) => View(restaurant: restaurant)
+            builder: (context) => View(id: restaurant.id, pictureId: restaurant.pictureId, title: restaurant.name)
           )),
           child: Padding(
             padding: EdgeInsets.all(20),
