@@ -89,7 +89,7 @@ class _ViewState extends State<View> {
               child: FutureBuilder(
                 future: _detailRestaurant,
                 builder: (context, snapshot) {
-                  if(snapshot.connectionState == ConnectionState.done) {
+                  if(snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
                     RestaurantDetail data = snapshot.data.restaurant;
                     reviews = data.customerReviews;
                     return Column(
@@ -209,15 +209,15 @@ class _ViewState extends State<View> {
                       ],
                     );
                   } else if(snapshot.hasError) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text("Failed to load data"),
-                      action: SnackBarAction(
-                        label: 'Okay',
-                        onPressed: () {
-                        },
-                      ),
-                    ));
-                    return Text("Failed to load data");
+                    return Center(
+                      child: Column(
+                        children: [
+                          SizedBox(height: 100),
+                          Icon(Icons.airplanemode_off, size: 30),
+                          Text("Failed to load data"),
+                        ],
+                      )
+                    );
                   } else {
                     return LinearProgressIndicator();
                   }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:restaurant_app/model/restaurant_notifier.dart';
 import 'package:restaurant_app/rating.dart';
 import 'package:restaurant_app/model/restaurant.dart';
 import 'package:restaurant_app/service/api_service.dart';
 import 'package:restaurant_app/view.dart';
 import 'package:restaurant_app/result.dart';
+import 'package:provider/provider.dart';
+import 'package:restaurant_app/model/restaurant_notifier.dart';
 import 'dart:async';
 
 class Home extends StatefulWidget {
@@ -48,40 +51,45 @@ class _HomeState extends State<Home> {
                       children: [
                         Text("Where do you want to eat today ?", style: TextStyle(color: Colors.white, fontSize: 22)),
                         SizedBox(height: 20),
-                        TextField(
-                          onSubmitted: (query) {
-                            Navigator.push(context, MaterialPageRoute(
-                              builder: (context) => Result(query: query)
-                            ));
-                          },
-                          cursorWidth: 1,
-                          cursorColor: Theme.of(context).accentColor,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintText: "Find restaurant...",
-                            prefixIcon: Icon(Icons.search_outlined),
-                            disabledBorder: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(30), 
-                              borderSide: BorderSide(color: Colors.transparent)
-                            ),
-                            enabledBorder: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(30), 
-                              borderSide: BorderSide(color: Colors.transparent)
-                            ), 
-                            focusedBorder: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(30), 
-                              borderSide: BorderSide(color: Colors.transparent)
-                            ),
-                            errorBorder: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(30), 
-                              borderSide: BorderSide(color: Colors.transparent)
-                            ),
-                            focusedErrorBorder: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(30), 
-                              borderSide: BorderSide(color: Colors.transparent)
-                            )
-                          ),
+                        Consumer<RestaurantNotifier>(
+                          builder: (context, snapshot, child) {
+                            return TextField(
+                              onSubmitted: (query) {
+                                snapshot.searchRestaurant(query);
+                                Navigator.push(context, MaterialPageRoute(
+                                  builder: (context) => Result()
+                                ));
+                              },
+                              cursorWidth: 1,
+                              cursorColor: Theme.of(context).accentColor,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.white,
+                                hintText: "Find restaurant...",
+                                prefixIcon: Icon(Icons.search_outlined),
+                                disabledBorder: UnderlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30), 
+                                  borderSide: BorderSide(color: Colors.transparent)
+                                ),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30), 
+                                  borderSide: BorderSide(color: Colors.transparent)
+                                ), 
+                                focusedBorder: UnderlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30), 
+                                  borderSide: BorderSide(color: Colors.transparent)
+                                ),
+                                errorBorder: UnderlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30), 
+                                  borderSide: BorderSide(color: Colors.transparent)
+                                ),
+                                focusedErrorBorder: UnderlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30), 
+                                  borderSide: BorderSide(color: Colors.transparent)
+                                )
+                              ),
+                            );
+                          }
                         ),
                       ],
                     )
@@ -103,7 +111,7 @@ class _HomeState extends State<Home> {
                         FutureBuilder<ListRestaurant>(
                           future:  _listRestaurant,
                           builder: (context, snapshot) {
-                            if(snapshot.connectionState == ConnectionState.done) {
+                            if(snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
                               List<RestaurantList> data = snapshot.data.restaurants;
                               if(snapshot.data.count > 0) {
                                 return Column(
@@ -130,18 +138,26 @@ class _HomeState extends State<Home> {
                                   ],
                                 );
                               } else {
-                                return Text("Failed load data");
+                                return Center(
+                                  child: Column(
+                                    children: [
+                                      SizedBox(height: 100),
+                                      Icon(Icons.warning, size: 30),
+                                      Text("No Items"),
+                                    ],
+                                  )
+                                );
                               }
                             } else if(snapshot.hasError) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text("Gagal memuat data"),
-                                action: SnackBarAction(
-                                  label: 'Okay',
-                                  onPressed: () {
-                                  },
-                                ),
-                              ));
-                              return Text("Failed load data");
+                              return Center(
+                                child: Column(
+                                  children: [
+                                    SizedBox(height: 100),
+                                    Icon(Icons.airplanemode_off, size: 30),
+                                    Text("Failed to load data"),
+                                  ],
+                                )
+                              );
                             } else {
                               return LinearProgressIndicator();
                             }

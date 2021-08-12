@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:restaurant_app/home.dart';
+import 'package:provider/provider.dart';
+import 'package:restaurant_app/model/restaurant_notifier.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<RestaurantNotifier>(create: (_) => RestaurantNotifier()),
+      ],
+      child: MyApp(),
+    )
+  );
 }
 
 class MyApp extends StatelessWidget {
