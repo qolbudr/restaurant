@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:restaurant_app/model/restaurant_notifier.dart';
+import 'package:restaurant_app/provider/restaurant_notifier.dart';
 import 'package:restaurant_app/rating.dart';
 import 'package:restaurant_app/model/restaurant.dart';
 import 'package:restaurant_app/service/api_service.dart';
 import 'package:restaurant_app/view.dart';
 import 'package:restaurant_app/result.dart';
 import 'package:provider/provider.dart';
-import 'package:restaurant_app/model/restaurant_notifier.dart';
+import 'package:restaurant_app/favorite.dart';
+import 'package:restaurant_app/utils/notification_helper.dart';
+import 'package:restaurant_app/settings.dart';
 import 'dart:async';
 
 class Home extends StatefulWidget {
@@ -15,6 +17,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final NotificationHelper _notificationHelper = NotificationHelper();
   Future<ListRestaurant> _listRestaurant;
   double spacing = 500;
 
@@ -24,7 +27,14 @@ class _HomeState extends State<Home> {
     Timer(Duration(seconds: 5), () => setState(() {
       spacing = 0;
     }));
+    _notificationHelper.configureSelectNotificationSubject('/view');
     _listRestaurant = ApiService().getList();
+  }
+
+  @override
+  void dispose() {
+    selectNotificationSubject.close();
+    super.dispose();
   }
 
   @override
@@ -32,7 +42,29 @@ class _HomeState extends State<Home> {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: Text("MyRestaurant", style: TextStyle(color: Colors.white, fontSize: 14)),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("MyRestaurant", style: TextStyle(color: Colors.white, fontSize: 14)),
+            Row(
+              children: [
+                InkWell(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => Favorite()
+                  )),
+                  child: Icon(Icons.favorite, color: Colors.white),                  
+                ),
+                SizedBox(width: 10),
+                InkWell(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => Settings()
+                  )),
+                  child: Icon(Icons.settings, color: Colors.white),                  
+                )
+              ],
+            )
+          ],
+        ),
         elevation: 0,
       ),
       body: Column(
@@ -206,7 +238,7 @@ Widget buildListRestaurant(BuildContext context, RestaurantList restaurant) {
         ),
         InkWell(
           onTap: () => Navigator.push(context, MaterialPageRoute(
-            builder: (context) => View(id: restaurant.id, pictureId: restaurant.pictureId, title: restaurant.name)
+            builder: (context) => View(restaurant)
           )),
           child: Padding(
             padding: EdgeInsets.all(20),

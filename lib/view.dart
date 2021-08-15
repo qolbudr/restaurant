@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:restaurant_app/model/restaurant.dart';
 import 'package:restaurant_app/rating.dart';
 import 'package:restaurant_app/service/api_service.dart';
+import 'package:restaurant_app/provider/favorite_notifier.dart';
+import 'package:provider/provider.dart';
 
 class View extends StatefulWidget {
-  final String id, title, pictureId;
-  View({this.id, this.title, this.pictureId});
+  final RestaurantList data;
+  View(this.data);
 
   @override
   _ViewState createState() => _ViewState();
@@ -21,7 +23,8 @@ class _ViewState extends State<View> {
   @override
   void initState() {
     super.initState();
-    _detailRestaurant = ApiService().getRestaurantById(widget.id);
+    _detailRestaurant = ApiService().getRestaurantById(widget.data.id);
+    context.read<FavoriteNotifier>().checkFavorite(widget.data.id);
   }
 
   @override
@@ -37,7 +40,7 @@ class _ViewState extends State<View> {
     });
 
     await ApiService().postReview(
-      widget.id,
+      widget.data.id,
       _nameController.value.text,
       _reviewController.value.text
     );
@@ -75,9 +78,9 @@ class _ViewState extends State<View> {
               elevation: 0,
               pinned: true,
               expandedHeight: 300,
-              title: Text(widget.title, style: TextStyle(color: Colors.white, fontSize: 14)),
+              title: Text(widget.data.name, style: TextStyle(color: Colors.white, fontSize: 14)),
               flexibleSpace: FlexibleSpaceBar(
-                background: Image.network("https://restaurant-api.dicoding.dev/images/large/" + widget.pictureId, fit: BoxFit.cover),
+                background: Image.network("https://restaurant-api.dicoding.dev/images/large/" + widget.data.pictureId, fit: BoxFit.cover),
               ),
             ),
           ];
@@ -95,14 +98,28 @@ class _ViewState extends State<View> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(data.name, style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold)),
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            RatingStar(count: data.rating.toInt()),
-                            VerticalDivider(thickness: 2),
-                            Icon(Icons.place, size: 16),
-                            SizedBox(width: 5),
-                            Text(data.city, style: TextStyle(fontSize: 14))
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(data.name, style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold)),
+                                Row(
+                                  children: [
+                                    RatingStar(count: data.rating.toInt()),
+                                    VerticalDivider(thickness: 2),
+                                    Icon(Icons.place, size: 16),
+                                    SizedBox(width: 5),
+                                    Text(data.city, style: TextStyle(fontSize: 14))
+                                  ],
+                                ),
+                              ],
+                            ),
+                            TextButton(
+                              onPressed: context.watch<FavoriteNotifier>().isFavorite ? () => context.read<FavoriteNotifier>().removeFavorite(data.id) : () => context.read<FavoriteNotifier>().saveFavorite(data),
+                              child: Icon(Icons.favorite, color: context.watch<FavoriteNotifier>().isFavorite ? Colors.green : Colors.black)
+                            )
                           ],
                         ),
                         SizedBox(height: 20),

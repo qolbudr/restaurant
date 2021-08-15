@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:restaurant_app/home.dart';
-import 'package:restaurant_app/model/restaurant_notifier.dart';
+import 'package:restaurant_app/provider/restaurant_notifier.dart';
 import 'package:provider/provider.dart';
 
 class Result extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
